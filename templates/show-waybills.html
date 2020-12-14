@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <title>Historia paczek</title>
+    <meta charset="utf-8">
+    <link href="styles/style.css" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Cambay&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+</head>
+<body class="registration_body">
+    <nav>
+        <div class="logo">
+            <img class="logo_image" src="images/logo.png" alt="logo">
+            <h4 class="logo_title">Paczuch Express Delivery</h4>
+        </div>
+        <ul>
+            <li><a href="/">Strona główna</a></li>
+            {% if isValidCookie %}
+            <li><a href="/add_waybill">Nadaj paczkę</a></li>
+            <li><a href="/show_waybills">Historia</a></li>
+            <li><a href="/contact">Kontakt</a></li>
+            <li><a href="/logout">Wyloguj się</a></li>
+            {% else %}
+            <li><a href="/register">Zarejestuj się</a></li>
+            <li><a href="/login">Zaloguj</a></li>
+            <li><a href="/contact">Kontakt</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+<header>
+    <h2>Sprawdź historię swoich paczek!</h2>
+</header>
+<section>
+
+    
+
+    <table class="download_table">
+        {% for file in my_files %}
+        <tr>
+            <th class="download_th">{{ file }}</th>
+            <th class="download_th">
+                <div>
+                    <a href="https://localhost:8081/waybill/{{file}}" target="_blank">
+                        <button class="download">Pobierz</button>
+                    </a>
+                </div>
+            </th>
+            <th class="download_th">
+                <div>
+                    <a href="https://localhost:8081/waybill/rm/{{file}}" target="_blank">
+                        <button class="remove">Usuń</button>
+                    </a>
+                </div>
+            </th>
+        </tr>
+        {% endfor %}
+    </table>
+
+</section>
+</body>
+</html>
