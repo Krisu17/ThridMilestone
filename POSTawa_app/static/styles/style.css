@@ -243,3 +243,9 @@ h2 {
 input, label {
     display:block;
 }
+
+.card-kurier {
+    justify-content: center;
+    width: 18rem;
+    background-color: #aafacd;
+}

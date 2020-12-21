@@ -35,7 +35,7 @@ def setup():
 
 @app.route("/")
 def index():
-    return render_template("index-files.html")
+    return render_template("files-index.html")
 
 
 
@@ -54,6 +54,20 @@ def download_waybill(waybill_hash):
         file_path = waybill.generate_and_save(FILES_PATH)
     return send_file(file_path)
 
+
+@cross_origin(origins=["https://localhost:8080/"], supports_credentials=True)
+@app.route("/waybill/rm/<string:waybill_hash>", methods=["DELETE"])
+def remove_waybill(waybill_hash):
+    if(db.hget(waybill_hash,"status") != "nowa"):
+        abort(403)
+    filename = waybill_hash + ".pdf"
+    file_path = os.path.join(FILES_PATH, filename)
+
+    if os.path.exists(file_path):
+        os.remove(file_path)
+    return make_response("Deleted", 200)
+    
+
 def to_waybill(waybill_hash):
     sender = to_sender(waybill_hash)
     recipient = to_recipient(waybill_hash)
@@ -69,9 +83,9 @@ def to_sender(waybill_hash):
     postal = db.hget(waybill_hash,"sender_postal")
     country = db.hget(waybill_hash,"sender_country")
     phone = db.hget(waybill_hash, "sender_phone")
-
+    
     address = Address(street, city, postal, country)
-    return Person(name, surname, address, phone)
+    return Person(name, surname, phone, address)
 
 
 def to_recipient(waybill_hash):
@@ -84,7 +98,7 @@ def to_recipient(waybill_hash):
     phone = db.hget(waybill_hash, "recipient_phone")
 
     address = Address(street, city, postal, country)
-    return Person(name, surname, address, phone)
+    return Person(name, surname, phone, address)
 
 
 def save_waybill(waybill):

@@ -1,29 +1,55 @@
-from flask import Flask, request
+from flask import Flask, request, render_template, make_response
 from flask_restplus import Api, Resource, fields
 from src.dto.request.book_request import BookRequest
 from src.dto.request.author_request import AuthorRequest
 from src.service.book_service import BookService
 from src.service.author_service import AuthorService
 from src.exception.exception import BookAlreadyExistsException, AuthorAlreadyExistsException, AuthorNotFoundByIdException
+import redis
+
 
 app = Flask(__name__)
 api_app = Api(app = app, version = "0.1", title = "Book_app API", description = "REST-full API for library")
+db = redis.Redis(host="redis", port=6379, decode_responses=True)
 
-hello_namespace = api_app.namespace("hello", description = "Info API")
+login_namespace = api_app.namespace("login", description="Login API")
+register_namespace = api_app.namespace("register", description="Register API")
+logout_namespace = api_app.namespace("logout", description="Logout API")
+page_namespace = api_app.namespace("home", description="Pages API")
+username_check_namespace = api_app.namespace("username", description="Username API")
+
 author_namespace = api_app.namespace("author", description = "Author API")
 book_namespace = api_app.namespace("book", description = "Book API")
 
 START = "start"
 LIMIT = "limit"
+SESSION_ID = "session-id"
 
-@hello_namespace.route("/")
-class Hello(Resource):
+@page_namespace.route("/")
+class Home(Resource):
 
-    @api_app.doc(responses = {200: "OK, Hello World"})
+    @api_app.doc(responses={200: "OK", 401: "UNAUTHORIZED"})
     def get(self):
-        return {
-                "message": "Hello, World!"
-        }
+        user = getUserFromCookie();
+        isValidCookie = user is not None
+        response = make_response(render_template("index.html", isValidCookie = isValidCookie))
+        return refresh_token_session(response, request.cookies)
+
+@page_namespace.route("/")
+class Page(Resource):
+
+    @api_app.doc()
+    def get(self):
+        user = getUserFromCookie();
+        isValidCookie = user is not None
+        response = make_response(render_template("index.html", isValidCookie = isValidCookie))
+        return refresh_token_session(response, request.cookies)
+
+@page_namespace.route("/styles/style.css")
+class Page(Resource):
+    
+    def get(self):
+        return 
 
 @author_namespace.route("/")
 class Author(Resource):
@@ -131,3 +157,16 @@ class BookList(Resource):
         except AuthorNotFoundByIdException as e:
             book_namespace.abort(404, e.__doc__, status = "Could not save new book. Author (by id) does not exist.", statusCode = "404")
 
+def refresh_token_session(response, cookies):
+    sessionId = cookies.get(SESSION_ID);
+    if (db.exists(str(sessionId))):
+        db.expire(sessionId, TOKEN_EXPIRES_IN_SECONDS)
+        response.set_cookie(SESSION_ID, sessionId, max_age=TOKEN_EXPIRES_IN_SECONDS, secure=True, httponly=True)
+    return response
+
+def getUserFromCookie():
+    name_hash = request.cookies.get(SESSION_ID)
+    if name_hash is not None:
+        login = db.get(name_hash);
+        return login;
+    return name_hash;

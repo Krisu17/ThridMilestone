@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <link href="styles/style.css" rel="stylesheet" type="text/css">
     <link href="http://fonts.googleapis.com/css?family=Cambay&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+    <script src="scripts/waybills.js"></script>
 </head>
 <body class="registration_body">
     <nav>
@@ -35,7 +36,7 @@
 
     <table class="download_table">
         {% for file in my_files %}
-        <tr>
+        <tr id={{file}}>
             <th class="download_th">{{ file }}</th>
             <th class="download_th">
                 <div>
@@ -46,8 +47,8 @@
             </th>
             <th class="download_th">
                 <div>
-                    <a href="https://localhost:8081/waybill/rm/{{file}}" target="_blank">
-                        <button class="remove">Usuń</button>
+                    <a target="blank" >
+                        <button class="remove" id={{file}} onclick="removeWaybill(id)">Usuń</button>
                     </a>
                 </div>
             </th>
