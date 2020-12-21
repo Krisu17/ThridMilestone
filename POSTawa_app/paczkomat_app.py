@@ -31,22 +31,14 @@ cors = CORS(app)
 
 @app.route("/", methods=[GET])
 def index():
-    user = getUserFromCookie();
-    isValidCookie = user is not None
-    if isValidCookie:
-        response = make_response(render_template("kurier-index.html", isValidCookie = isValidCookie))
-        return refresh_token_session(response, request.cookies);
-    else:
-        return redirect("/login")
+    return make_response(render_template("paczkomat-index.html"))
+
+@app.route("/parcel_homepage_<string:p_id>", methods=[GET])
+def homepage(p_id):
+
+    return make_response(render_template("paczkomat-homepage.html", p_id = p_id))
     
 
-#Ukryty adres rejstracji nowego kuriera
-@app.route("/register", methods=[GET])
-def register():
-    user = getUserFromCookie();
-    isValidCookie = user is not None
-    response = make_response(render_template("kurier-register.html", isValidCookie = isValidCookie))
-    return refresh_token_session(response, request.cookies);
 
 @app.route("/login", methods=[GET])
 def login():
@@ -56,45 +48,24 @@ def login():
     return refresh_token_session(response, request.cookies);
 
 
-@app.route("/pickup", methods=[POST])
-def pickup():
-    user = getUserFromCookie() 
-    isValidCookie = user is not None
-    if isValidCookie:
-        form = request.form
-        userWaybillList = user + "-packages"
-        package_id = form.get("package-id")
-        package_status = db.hget(package_id, "status")
-        if (package_status is None):
-            return("Taka paczka nie istnieje", 400)
-        if (package_status != "nowa"):
-            return("Paczka została już odebrana", 403)
-        db.hset(userWaybillList, package_id, "")
-        db.hset(package_id, "status", "przekazana_kurierowi")
-        response = make_response("Status changed", 201)
-        return refresh_token_session(response, request.cookies);
-    else:
-        return abort(401)
+@app.route("/drop_<string:p_id>", methods=[POST])
+def drop(p_id):
 
-# @app.route("/waybill/rm/<string:waybill_hash>", methods=["DELETE"])
-# def remove_waybill(waybill_hash):
-#     login = getUserFromCookie();
-#     isValidCookie = login is not None
-#     if isValidCookie:
-#         userWaybillList = login + "-waybills"
-#         filePath = db.hget(waybill_hash, "waybill_image")
-#         if os.path.exists(filePath):
-#             os.remove(filePath)
-#         if(db.hdel(waybill_hash, "sender_name", "sender_surname", "sender_street", "sender_city", "sender_postal", "sender_country", "sender_phone", "recipient_name", "recipient_surname", "recipient_street", "recipient_city", "recipient_postal", "recipient_country", "recipient_phone", "creation_time", "status", "waybill_image") != 17):
-#             abort(400)
-#         if(db.hdel(userWaybillList, waybill_hash) != 1):
-#             abort(400)
-#         return make_response("Deleted", 200)
-#     else:
-#         return abort(401)
+    form = request.form
+    package_id = form.get("package-id")
+    package_status = db.hget(package_id, "status")
+    paczkomat_packages = 1
+    if (package_status is None):
+        return("Taka paczka nie istnieje", 400)
+    if (package_status != "nowa"):
+        return("Paczka została już nadana", 403)
+    db.hset(p_id, package_id, "")
+    db.hset(package_id, "status", "oczekujaca_w_paczkomacie")
+    return make_response("Status changed", 201)
 
-@app.route("/show_packages", methods=[GET])
-def show_packages():
+
+@app.route("/show_packages_<string:p_id>", methods=[GET])
+def show_packages(p_id):
     user = getUserFromCookie()
     isValidCookie = user is not None
     if isValidCookie:
@@ -105,38 +76,10 @@ def show_packages():
     else:
         return abort(401)
 
-
-@app.route("/logout")
-def logout():
-    user = getUserFromCookie();
-    isValidCookie = user is not None
-    if isValidCookie:
-        response = removeCookies()
-    return redirect("/")
-
-
-@app.route("/register_courier/<string:new_user>")
-def is_login_taken(new_user):
-    empty = {}
-    dbResponse = db.hgetall(new_user)
-    if dbResponse == empty:
-        return {"message": "User don't exist"}, 404
-    else:
-        return {"message": "Username already taken"}, 200
-
-
-
-@app.route("/register/create_new_courier/<string:new_user>", methods=[POST])
-def create_new_courier(new_user):
-    login = request.form['login'] + "_kurier"
-    password = request.form['password']
-    if(
-        db.hset(login, "password", password) != 1 
-    ):
-        db.hdel(login, "password");
-        return {"message": "Something went wrong while adding new user"}, 400
-    else:
-        return {"message": "User created succesfully"}, 201
+@app.route("/sp_<string:p_id>", methods=[GET])
+def sp(p_id):
+    my_packages = db.hgetall(p_id);
+    return render_template("paczkomat-packages.html", my_packages = my_packages)
 
 
 @app.route("/login_kurier", methods=[POST])
@@ -164,19 +107,11 @@ def refresh_token_session(response, cookies):
         response.set_cookie(KURIER_SESSION_ID, sessionId, max_age=TOKEN_EXPIRES_IN_SECONDS, secure=True, httponly=True)
     return response
 
-@app.route('/register/user_data/<string:user>')
-def getUser(user):
-    return db.hgetall(user)
 
-@app.route("/client_pickup")
-def clientPickup():
-    user = getUserFromCookie();
-    isValidCookie = user is not None
-    if isValidCookie:
-        response = make_response(render_template("kurier-client-pickup.html", isValidCookie = isValidCookie))
-        return refresh_token_session(response, request.cookies);
-    else:
-        return redirect("/login")
+@app.route("/client_drop_<string:p_id>")
+def client_drop(p_id):
+    return make_response(render_template("paczkomat-client-drop.html", p_id = p_id))
+
 
 
 def getUserFromCookie():

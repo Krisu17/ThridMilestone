@@ -101,7 +101,7 @@ def add_waybill_new():
         response = make_response(redirect("/show_waybills"))
         return refresh_token_session(response, request.cookies);
     else:
-        return abort(401)
+        return make_response("Użytkownik niezalogowany", 401)
 
 @app.route("/waybill/rm/<string:waybill_hash>", methods=["DELETE"])
 def remove_waybill(waybill_hash):
@@ -110,15 +110,17 @@ def remove_waybill(waybill_hash):
     if isValidCookie:
         userWaybillList = login + "-waybills"
         filePath = db.hget(waybill_hash, "waybill_image")
+        if(db.hget(waybill_hash, "status") != "nowa"):
+            return make_response("Paczka została już odebrana", 403)
         if os.path.exists(filePath):
             os.remove(filePath)
         if(db.hdel(waybill_hash, "sender_name", "sender_surname", "sender_street", "sender_city", "sender_postal", "sender_country", "sender_phone", "recipient_name", "recipient_surname", "recipient_street", "recipient_city", "recipient_postal", "recipient_country", "recipient_phone", "creation_time", "status", "waybill_image") != 17):
-            abort(400)
+            return make_response("Podczas usuwania wystąpił błąd", 400)
         if(db.hdel(userWaybillList, waybill_hash) != 1):
-            abort(400)
+            return make_response("Podczas usuwania wystąpił błąd", 400)
         return make_response("Deleted", 200)
     else:
-        return abort(401)
+        return make_response("Użytkownik niezalogowany", 401)
 
 @app.route("/show_waybills", methods=[GET])
 def show_waybills():
@@ -130,7 +132,7 @@ def show_waybills():
         response = make_response(render_template("client-show-waybills.html", isValidCookie = isValidCookie, my_files = my_files))
         return refresh_token_session(response, request.cookies);
     else:
-        return render_template("errors/401.html")
+        return abort(401)
 
 
 @app.route("/logout")

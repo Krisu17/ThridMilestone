@@ -1,14 +1,15 @@
 const DELETE = "DELETE";
-const URL_TO_DB = "https://localhost:8080/waybill/rm/";
-const URL_TO_FILE = "https://localhost:8081/waybill/rm/";
+const GET = "GET";
+const URL_TO_DB = "https://localhost:8080/waybill/";
+const URL_TO_FILE = "https://localhost:8081/waybill/";
 var HTTP_STATUS = {OK: 200, BAD_REQUEST: 400, UNAUTHORIZED: 401, FORBIDDEN: 403, NOT_FOUND: 404};
     
     
     
 async function removeWaybill(hash_name) {
     
-    let removeFileURL = URL_TO_FILE + hash_name;
-    let removeFromDbURL = URL_TO_DB + hash_name;
+    let removeFileURL = URL_TO_FILE + "rm/" + hash_name;
+    let removeFromDbURL = URL_TO_DB + "rm/" + hash_name;
     let rmParams = {
         method: DELETE,
         redirect: "follow"
@@ -20,17 +21,18 @@ async function removeWaybill(hash_name) {
         if (res2.status === HTTP_STATUS.OK) {
             console.log("Poprawnie usunięto.")
             document.getElementById(hash_name).innerHTML = ""
+        } else if(res2.status === HTTP_STATUS.FORBIDDEN) {
+            alert("Nie można usunąć listu przewozowego.\nPaczka została już nadana.")
         } else {
             alert("Wystąpił błąd podczas usuwania. \nSpróbuj zalogować się ponownie i spróbuj jeszcze raz.")
         }
     } else if (res.status == HTTP_STATUS.FORBIDDEN) {
-        console.log("Status: " + res.status)
-        alert("Nie można usunąć listu przewozowego.\n Paczka została odebrana przez kuriera.")
+
+        alert("Nie można usunąć listu przewozowego.\nPaczka została już nadana.")
     } else {
         console.log("Unknown error: " +res.status)
     }
 }
-
 
 
 

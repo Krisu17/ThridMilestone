@@ -18,12 +18,15 @@
     </div>
     <ul>
         <li><a href="/">Strona główna</a></li>
+        <li><a href="/client_drop_{{p_id}}">Nadaj paczkę</a></li>
+        <li><a href="/courier_pickup_{{p_id}}">Dla kuriera</a></li>
+        <li>Wybrano paczkomat {{p_id}}</li>
 
 
     </ul>
 </nav>
 <section>
-    <h2>Wybierz Paczkomat</h2>
+    <h2>Wybierz co chcesz zrobić</h2>
 </section>
 <section>
     <article>
@@ -31,22 +34,22 @@
     <div class="row">
         <div class="card col-6 col-md-4 col-lg-3 card-kurier" >
             
-            <img src="images/paczkomat1.jpg" class="card-img-top" alt="Odbior od klienta">
+            <img src="images/drop_package.jpg" class="card-img-top" alt="Odbior od klienta">
             <div class="card-body">
-                <h5 class="card-title">Paczkomat 1</h5>
-                <p class="card-text">Paczkomat na ulicy Kurierskiej.</p>
-                <a href="/parcel_homepage_p1" class="btn btn-primary stretched-link">Wybierz</a>
+                <h5 class="card-title">Nadaj paczkę</h5>
+                <p class="card-text">Nadaj tutaj paczkę, aby pozostawić ją do odbioru przez naszego kuriera.</p>
+                <a href="/client_drop_{{p_id}}" class="btn btn-primary stretched-link" >Przejdź</a>
             </div>
 
         </div>
         
         <div class="card col-6 col-md-4 ml-lg-auto col-lg-3 card-kurier" >
 
-            <img src="images/paczkomat3.jpg" class="card-img-top" alt="Pobrane paczki">
+            <img src="images/courier.jpg" class="card-img-top" alt="Pobrane paczki">
             <div class="card-body">
-                <h5 class="card-title">Paczkomat 2</h5>
-                <p class="card-text">Paczkomat na ulicy Paczuszkowej.</p>
-                <a href="/parcel_homepage_p2" class="btn btn-primary stretched-link">Wybierz</a>
+                <h5 class="card-title">Dla kuriera</h5>
+                <p class="card-text">Aplet logowania dla kurierów.</p>
+                <a href="/courier_pickup_{{p_id}}" class="btn btn-primary stretched-link">Przejdź</a>
             </div>
 
         </div>

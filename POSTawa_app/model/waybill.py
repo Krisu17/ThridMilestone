@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf8 -*-
 import uuid
 from fpdf import FPDF
 from datetime import datetime
@@ -15,7 +17,8 @@ class Waybill:
     def generate_and_save(self, path="./"):
         pdf = FPDF()
         pdf.add_page()
-        pdf.set_font("Arial", size=10)
+        pdf.add_font('Calibri', '', 'static/fonts/calibri.ttf', uni=True)
+        pdf.set_font('Calibri', '', size=10)
         filename = "{}{}.pdf".format(path, self.__package_id)
         self.__add_table_to_pdf(pdf, filename)
 
