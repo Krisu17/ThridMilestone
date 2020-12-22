@@ -17,7 +17,7 @@
             <li><a href="/">Strona główna</a></li>
             {% if isValidCookie %}
             <li><a href="/add_waybill">Nadaj paczkę</a></li>
-            <li><a href="/show_waybills">Historia</a></li>
+            <li><a href="/show_waybills_0">Historia</a></li>
             <li><a href="/contact">Kontakt</a></li>
             <li><a href="/logout">Wyloguj się</a></li>
             {% else %}
@@ -54,8 +54,26 @@
             </th>
         </tr>
         {% endfor %}
+        <tr>
+            <th>
+                {% if prev_start == None %}
+                {% else %}
+                <a href="https://localhost:8080/show_waybills_{{prev_start}}" >
+                    <button class="remove">Poprzednia</button>
+                </a>
+                {% endif %}
+            </th>
+            <th>
+                {% if next_start == None %}
+                {% else %}
+                <a href="https://localhost:8080/show_waybills_{{next_start}}">
+                    <button class="download">Następna</button>
+                </a>
+                {% endif %}
+            </th>
+        </tr>
     </table>
-
+    
 </section>
 </body>
 </html>

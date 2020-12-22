@@ -4,19 +4,19 @@ document.addEventListener('DOMContentLoaded', function (event) {
     const POST = "POST";
     const URL = "https://localhost:8083/";
 
-    const PARCEL_FIELD_ID = "parcel-locker-id";
-    const PACKAGE_FIELD_ID = "package-id";
-    const PACKAGE_BUTTON_ID = "button-package-form";
+    const PACKAGE_FIELD_ID = "token-id";
+    const PACKAGE_BUTTON_ID = "button-token-form";
     var HTTP_STATUS = {OK: 200, CREATED: 201, BAD_REQUEST: 400, FORBIDDEN: 403, NOT_FOUND: 404};
 
     prepareEventOnIdChange();
 
-    let packageForm = document.getElementById("package-form");
+    let packageForm = document.getElementById("token-form");
+    let paczkomat_id = document.getElementById("parcel-locker-id").innerHTML;
 
     packageForm.addEventListener("submit", function (event) {
         event.preventDefault();
         
-        ifFormOkTryDropPackage();
+        ifFormOkTryPickupPackage();
     });
 
 
@@ -26,48 +26,45 @@ document.addEventListener('DOMContentLoaded', function (event) {
     }
     
 
-    const tryDropPackage = async () => {
-        let parcel_locker_id = document.getElementById(PARCEL_FIELD_ID).innerText
-        let DropUrl = URL + "drop_" + parcel_locker_id;
+    const tryPickupPackage = async () => {
+        let pickupUrl = URL + "pickup_from_" + paczkomat_id;
 
-        let DropParams = {
+        let pickupParams = {
             method: POST,
             body: new FormData(packageForm),
             redirect: "follow"
         };
 
-        let res = await fetch (DropUrl, DropParams);
-        console.log(res.status)
+        let res = await fetch (pickupUrl, pickupParams);
         displayInConsoleCorrectResponse(res);
         return res.json();
 
     }
 
 
-    const ifFormOkTryDropPackage = async() => {
+    const ifFormOkTryPickupPackage = async() => {
         
         
-        let warningDropInfoElemId = "unsuccessfulDrop";
-        let warningMessage = "Nieprawidłowy identyfikator przesyłki.";
+        let warningPickupInfoElemId = "unsuccessfulPickup";
+        let warningMessage = "Nieprawidłowy token";
         if(isAnyEmptyImput()) {
-            showWarningMessage(warningDropInfoElemId, warningMessage, PACKAGE_BUTTON_ID);
+            showWarningMessage(warningPickupInfoElemId, warningMessage, PACKAGE_BUTTON_ID);
             return false;
         }
 
-        removeWarningMessage(warningDropInfoElemId);
-        let validityWarningElemId = document.getElementById("unsuccessfulDrop");
+        removeWarningMessage(warningPickupInfoElemId);
+        let validityWarningElemId = document.getElementById("unsuccessfulPickup");
         
         if( validityWarningElemId === null) {
                 try{
-                    let res = await tryDropPackage();
+                    let res = await tryPickupPackage();
                     setTimeout(function(){
-                        if (document.getElementById("correctDrop") !== null) {
-                            let correctDropInfo = "correctDrop";
-                            removeWarningMessage(correctDropInfo);
+                        if (document.getElementById("correctPickup") !== null) {
+                            window.location = "/show_packages_" + paczkomat_id.value + "_0";
                         }
                     }, 2000);
                 } catch (err) {
-                    console.log("Caught error ");
+                   
                 }
         } else {
             return false;
@@ -86,22 +83,22 @@ document.addEventListener('DOMContentLoaded', function (event) {
 
     function displayInConsoleCorrectResponse(correctResponse) {
         let status = correctResponse.status;
-        let correctDropInfo = "correctDrop";
-        let sucessMessage = "Przyjęto nadanie paczki.";
-        let warningDropInfo = "unsuccessfulDrop";
-        let warningMessage = "Nieprawidłowy identyfikator paczki";
-        let warningPackageTakenMessage = "Paczka została już odebrana."
+        let correctPickupInfo = "correctPickup";
+        let sucessMessage = "Przyjęto token";
+        let warningPickupInfo = "unsuccessfulPickup";
+        let warningMessage = "Nieprawidłowy token";
+        let warningPackageTakenMessage = "Nieprawidłowy token"
 
 
         if (status === HTTP_STATUS.FORBIDDEN) {
-            removeWarningMessage(correctDropInfo);
-            showWarningMessage(warningDropInfo, warningPackageTakenMessage, PACKAGE_FIELD_ID)
+            removeWarningMessage(correctPickupInfo);
+            showWarningMessage(warningPickupInfo, warningPackageTakenMessage, PACKAGE_FIELD_ID)
         } else if (status !== HTTP_STATUS.CREATED) {
-            removeWarningMessage(correctDropInfo);
-            showWarningMessage(warningDropInfo, warningMessage, PACKAGE_FIELD_ID);
+            removeWarningMessage(correctPickupInfo);
+            showWarningMessage(warningPickupInfo, warningMessage, PACKAGE_FIELD_ID);
         }  else {
-            removeWarningMessage(warningDropInfo);
-            showSuccesMessage(correctDropInfo, sucessMessage, PACKAGE_BUTTON_ID);
+            removeWarningMessage(warningPickupInfo);
+            showSuccesMessage(correctPickupInfo, sucessMessage, PACKAGE_BUTTON_ID);
         }
     }
 
@@ -155,7 +152,7 @@ document.addEventListener('DOMContentLoaded', function (event) {
 
 
     function updatePackageIdAvailabilityMessage() {
-        let validityWarningElemId = "validDropWarning";
+        let validityWarningElemId = "validPickupWarning";
         let wrongPackageIdFormatWarningMessage = "Identyfikator musi składać się z co najmniej 5 znaków i zawierać tylko litery i cyfry."
         if (isPackageIdValid() === true) {
             removeWarningMessage(validityWarningElemId);

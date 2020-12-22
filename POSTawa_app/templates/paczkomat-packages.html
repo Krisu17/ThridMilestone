@@ -37,16 +37,41 @@
             <th class="download_th">{{ file }}</th>
             <th class="download_th">
                 <div>
-                    <a href="https://localhost:8081/waybill/{{file}}" target="_blank">
+                    <a href="https://localhost:8081/waybill/{{file}}" target="blank">
                         <button class="download">Pobierz</button>
                     </a>
                 </div>
             </th>
+            <th class="download_th">
+                <input type="checkbox" id={{file}} name={{file}}>
+            </th>
 
         </tr>
         {% endfor %}
+        <tr>
+            <th>
+                {% if prev_start == None %}
+                {% else %}
+                <a href={{prev_start}}>
+                    <button class="remove">Poprzednia</button>
+                </a>
+                {% endif %}
+            </th>
+            <th>
+                {% if next_start == None %}
+                {% else %}
+                <a href={{next_start}} >
+                    <button class="download">Następna</button>
+                </a>
+                {% endif %}
+            </th>
+        </tr>
+        
+        <input type="hidden" id="kurier_token" name="kurier_token" value"{{kurier_token}}>
     </table>
-
+    <tr>
+        <button type="submit" class="download submit" id="pickup_button_id">Odbierz</button>
+    </tr>
 </section>
 </body>
 </html>

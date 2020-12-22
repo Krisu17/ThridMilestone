@@ -18,6 +18,7 @@ users = "users"
 FILES_PATH = "waybill_files/"
 IMAGES_PATH = "waybill_files/images"
 ACCEPTED_IMAGE_EXTENSIONS = ["png", "jpeg", "jpg"]
+ITEMS_ON_PAGE = 5
 
 app = Flask(__name__, static_url_path="")
 db = redis.Redis(host="redis", port=6379, decode_responses=True)
@@ -98,7 +99,7 @@ def add_waybill_new():
         pathToImage = save_file(package_id, request.files["waybill_image"])
         db.hset(package_id, "waybill_image", pathToImage)
 
-        response = make_response(redirect("/show_waybills"))
+        response = make_response(redirect("/show_waybills_0"))
         return refresh_token_session(response, request.cookies);
     else:
         return make_response("Użytkownik niezalogowany", 401)
@@ -122,15 +123,30 @@ def remove_waybill(waybill_hash):
     else:
         return make_response("Użytkownik niezalogowany", 401)
 
-@app.route("/show_waybills", methods=[GET])
-def show_waybills():
+@app.route("/show_waybills_<int:start>", methods=[GET])
+def show_waybills(start):
     user = getUserFromCookie();
     isValidCookie = user is not None
     if isValidCookie:
         userWaybillList = user + "-waybills"
-        my_files = db.hgetall(userWaybillList);
-        response = make_response(render_template("client-show-waybills.html", isValidCookie = isValidCookie, my_files = my_files))
-        return refresh_token_session(response, request.cookies);
+        waybills = db.hgetall(userWaybillList);
+        waybills_list = list(waybills)
+        if (start >= 0):
+            number_of_waybills = len(waybills_list)
+            end = start + ITEMS_ON_PAGE
+            if (end >= number_of_waybills):
+                end = number_of_waybills
+                next_start = None
+            else:
+                next_start = end
+            prev_start = start - ITEMS_ON_PAGE
+            if (prev_start < 0):
+                prev_start = None
+            my_files = waybills_list[start:end]
+            response = make_response(render_template("client-show-waybills.html", isValidCookie = isValidCookie, my_files = my_files, prev_start = prev_start, next_start = next_start))
+            return refresh_token_session(response, request.cookies);
+        else:
+            abort(400)
     else:
         return abort(401)
 
@@ -208,10 +224,6 @@ def refresh_token_session(response, cookies):
         db.expire(sessionId, TOKEN_EXPIRES_IN_SECONDS)
         response.set_cookie(USER_SESSION_ID, sessionId, max_age=TOKEN_EXPIRES_IN_SECONDS, secure=True, httponly=True)
     return response
-
-@app.route('/<string:user>')
-def getUser(user):
-    return db.hgetall(user)
 
 
 def getUserFromCookie():

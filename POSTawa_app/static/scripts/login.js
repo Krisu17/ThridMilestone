@@ -50,8 +50,8 @@ document.addEventListener('DOMContentLoaded', function (event) {
 
     const ifFormOkTryLogIn = async() => {
         
-        let validityWarningElemId = document.getElementById("unsuccessfulLogin");
-        let passwordWarningElemId = document.getElementById("passwordWarning");
+        
+        
         let warningLoginInfoElemId = "unsuccessfulLogin";
         let warningMessage = "Nieprawidłowy login lub hasło.";
         if(isAnyEmptyImput()) {
@@ -60,7 +60,9 @@ document.addEventListener('DOMContentLoaded', function (event) {
         }
 
         removeWarningMessage(warningLoginInfoElemId);
-
+        let validityWarningElemId = document.getElementById("unsuccessfulLogin");
+        let passwordWarningElemId = document.getElementById("passwordWarning");
+        
         if( validityWarningElemId === null &&
             passwordWarningElemId === null) {
                 try{

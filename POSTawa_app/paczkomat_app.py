@@ -14,6 +14,9 @@ GET = "GET"
 POST = "POST"
 KURIER_SESSION_ID = "kurier-session-id"
 users = "users"
+ITEMS_ON_PAGE = 5
+RESPONSE_URL = "https://localhost:8083/show_packages_"
+PACZKOMATY = ["p1", "p2"]
 
 
 app = Flask(__name__, static_url_path="")
@@ -35,10 +38,8 @@ def index():
 
 @app.route("/parcel_homepage_<string:p_id>", methods=[GET])
 def homepage(p_id):
-
     return make_response(render_template("paczkomat-homepage.html", p_id = p_id))
     
-
 
 @app.route("/login", methods=[GET])
 def login():
@@ -64,23 +65,31 @@ def drop(p_id):
     return make_response("Status changed", 201)
 
 
-@app.route("/show_packages_<string:p_id>", methods=[GET])
-def show_packages(p_id):
-    user = getUserFromCookie()
-    isValidCookie = user is not None
-    if isValidCookie:
-        userWaybillList = user + "-packages"
-        my_files = db.hgetall(userWaybillList);
-        response = make_response(render_template("kurier-packages.html", isValidCookie = isValidCookie, my_files = my_files))
-        return refresh_token_session(response, request.cookies);
-    else:
-        return abort(401)
-
-@app.route("/sp_<string:p_id>", methods=[GET])
-def sp(p_id):
+@app.route("/show_packages_<string:p_id>_<int:start>", methods=[GET])
+def show_packages(p_id, start):
     my_packages = db.hgetall(p_id);
-    return render_template("paczkomat-packages.html", my_packages = my_packages)
+    waybills_list = list(my_packages)
+    if (start >= 0):
+        number_of_waybills = len(waybills_list)
+        end = start + ITEMS_ON_PAGE
+        if (end >= number_of_waybills):
+            end = number_of_waybills
+            next_start = None
+        else:
+            next_start = RESPONSE_URL + p_id + "_" + str(end)
+        prev_start_number = start - ITEMS_ON_PAGE
+        if (prev_start_number < 0):
+            prev_start = None
+        else:
+            prev_start = RESPONSE_URL + p_id + "_" + str(prev_start_number)
+        my_packages = waybills_list[start:end]
+        return make_response(render_template("paczkomat-packages.html", my_packages = my_packages, prev_start = prev_start, next_start = next_start, p_id = p_id));
+    else:
+        abort(400)
 
+@app.route("/courier_pickup_<string:p_id>")
+def courier_pickup(p_id):
+    return render_template("paczkomat-courier-pickup.html", p_id = p_id)
 
 @app.route("/login_kurier", methods=[POST])
 def login_kurier():
@@ -99,6 +108,23 @@ def login_kurier():
     else:
         return {"message": "Login or password incorrect."}, 400
 
+@app.route("/pickup_from_<string:p_id>", methods=[POST])
+def pickup_from(p_id):
+    if(p_id not in PACZKOMATY):
+        return make_response("Bad request", 400)
+    kurier_token = request.form['kurier_token']
+    kurier = db.hget(kurier_token, p_id)
+    if(kurier is not None):
+        kurier_packages = kurier + "-packages"
+        packages = db.hkeys(p_id)
+        for hash_name in packages:
+            if (hash_name in request.form.keys()):
+                if(request.form[hash_name]):
+                    db.hset(kurier_packages, hash_name)
+                    db.hdel(p_id, hash_name)
+                    db.hset(hash_name, "status", "odebrana_z_paczkomatu")
+    else:
+        make_response("Unauthorized", 401)
 
 def refresh_token_session(response, cookies):
     sessionId = cookies.get(KURIER_SESSION_ID);

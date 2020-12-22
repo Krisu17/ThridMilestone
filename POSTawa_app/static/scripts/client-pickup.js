@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function (event) {
 
     const ifFormOkTryPickupPackage = async() => {
         
-        let validityWarningElemId = document.getElementById("unsuccessfulPickup");
+        
         let warningPickupInfoElemId = "unsuccessfulPickup";
         let warningMessage = "Nieprawidłowy identyfikator przesyłki.";
         if(isAnyEmptyImput()) {
@@ -52,11 +52,11 @@ document.addEventListener('DOMContentLoaded', function (event) {
         }
 
         removeWarningMessage(warningPickupInfoElemId);
-
+        let validityWarningElemId = document.getElementById("unsuccessfulPickup");
+        
         if( validityWarningElemId === null) {
                 try{
                     let res = await tryPickupPackage();
-                    console.log("To je status" + res.status)
                     setTimeout(function(){
                         if (document.getElementById("correctPickup") !== null) {
                             let correctPickupInfo = "correctPickup";

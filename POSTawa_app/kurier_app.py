@@ -14,6 +14,8 @@ GET = "GET"
 POST = "POST"
 KURIER_SESSION_ID = "kurier-session-id"
 users = "users"
+PACZKOMATY = ["p1", "p2"]
+TOKEN_DURATION_TIME = 60
 
 
 app = Flask(__name__, static_url_path="")
@@ -76,22 +78,6 @@ def pickup():
     else:
         return abort(401)
 
-# @app.route("/waybill/rm/<string:waybill_hash>", methods=["DELETE"])
-# def remove_waybill(waybill_hash):
-#     login = getUserFromCookie();
-#     isValidCookie = login is not None
-#     if isValidCookie:
-#         userWaybillList = login + "-waybills"
-#         filePath = db.hget(waybill_hash, "waybill_image")
-#         if os.path.exists(filePath):
-#             os.remove(filePath)
-#         if(db.hdel(waybill_hash, "sender_name", "sender_surname", "sender_street", "sender_city", "sender_postal", "sender_country", "sender_phone", "recipient_name", "recipient_surname", "recipient_street", "recipient_city", "recipient_postal", "recipient_country", "recipient_phone", "creation_time", "status", "waybill_image") != 17):
-#             abort(400)
-#         if(db.hdel(userWaybillList, waybill_hash) != 1):
-#             abort(400)
-#         return make_response("Deleted", 200)
-#     else:
-#         return abort(401)
 
 @app.route("/show_packages", methods=[GET])
 def show_packages():
@@ -177,6 +163,35 @@ def clientPickup():
         return refresh_token_session(response, request.cookies);
     else:
         return redirect("/login")
+
+@app.route("/parcel_pickup")
+def parcel_pickup():
+    user = getUserFromCookie();
+    isValidCookie = user is not None
+    if isValidCookie:
+        response = make_response(render_template("kurier-generate-token.html", isValidCookie = isValidCookie))
+        return refresh_token_session(response, request.cookies);
+    else:
+        return redirect("/login")
+
+
+@app.route("/generate_token/<string:p_id>", methods=[POST])
+def generate_token(p_id):
+    user = getUserFromCookie();
+    isValidCookie = user is not None
+    if isValidCookie:
+        if(p_id in PACZKOMATY):
+            token = uuid.uuid4().hex
+            user_tag = "-user"
+            db.set(token, p_id)
+            db.set(token + user_tag, user)
+            db.expire(token, TOKEN_DURATION_TIME)
+            db.expire(token + user_tag, TOKEN_DURATION_TIME)
+            return make_response(jsonify(token=token), 201)
+        else:
+            return make_response("Invalid paczkomat id", 400)
+    else:
+        return make_response("Unauthorized", 403)
 
 
 def getUserFromCookie():
